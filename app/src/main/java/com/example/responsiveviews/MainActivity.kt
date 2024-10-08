@@ -1,27 +1,35 @@
 package com.example.responsiveviews
 
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.responsiveviews.ui.theme.ResponsiveViewsTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,17 +48,115 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Responsive Views based on device configuration and screen size and orientation (portrait/landscape)
 @Composable
 fun Response(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val configuration = LocalConfiguration.current
+        val orientation = configuration.orientation
+
+        // Use the maxWidth from BoxWithConstraints for device size checks
+        when {
+            // Tablet in landscape mode
+            orientation == Configuration.ORIENTATION_LANDSCAPE && maxWidth > 600.dp -> {
+                TabletLandscapeContent(name)
+            }
+            // Tablet in portrait mode
+            orientation == Configuration.ORIENTATION_PORTRAIT && maxWidth > 600.dp -> {
+                TabletPortraitContent(name)
+            }
+            // Phone in landscape mode
+            orientation == Configuration.ORIENTATION_LANDSCAPE && maxWidth <= 600.dp -> {
+                PhoneLandscapeContent(name)
+            }
+            // Phone in portrait mode
+            orientation == Configuration.ORIENTATION_PORTRAIT && maxWidth <= 600.dp -> {
+                PhonePortraitContent(name)
+            }
+            // Round screen (e.g., smartwatch)
+            configuration.isScreenRound -> {
+                RoundScreenContent(name)
+            }
+            else -> {
+                PhonePortraitContent(name) // Default to phone portrait if other checks fail
+            }
+        }
+    }
 }
 
+
+// Tablet content on portrait (larger device)
+@Composable
+fun TabletPortraitContent(name: String) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize().padding(16.dp)
+    ) {
+        Text(text = "Tablet Portrait Layout for $name", style = MaterialTheme.typography.headlineLarge)
+        Spacer(modifier = Modifier.height(16.dp))
+        CookieClickerApp() // Cookie Clicker App
+    }
+}
+
+// Tablet content on landscape (larger device)
+@Composable
+fun TabletLandscapeContent(name: String) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxSize().padding(16.dp)
+    ) {
+        Text(text = "Tablet Landscape Layout for $name", style = MaterialTheme.typography.headlineLarge)
+        Spacer(modifier = Modifier.width(16.dp))
+        CookieClickerApp() // Cookie Clicker App
+    }
+}
+
+// Phone in portrait mode (small device)
+@Composable
+fun PhonePortraitContent(name: String) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize().padding(8.dp)
+    ) {
+        Text(text = "Hello $name!", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+        CookieClickerApp() // Cookie Clicker App
+    }
+}
+
+// Phone in landscape mode (small device)
+@Composable
+fun PhoneLandscapeContent(name: String) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxSize().padding(16.dp)
+    ) {
+        Text(text = "Phone Landscape Layout for $name", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.width(16.dp))
+        CookieClickerApp() // Cookie Clicker App
+    }
+}
+
+// Round screen content (watch / smaller device)
+@Composable
+fun RoundScreenContent(name: String) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize().padding(16.dp)
+    ) {
+        Text(text = "Hello $name!", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(8.dp))
+        CookieClickerApp() // Cookie Clicker App
+    }
+}
 @Composable
 fun CookieClickerApp() {
-    var count by remember { mutableStateOf(0) }
+    var count by remember { mutableIntStateOf(0) }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -65,7 +171,7 @@ fun CookieClickerApp() {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Counter Display
-        Text(text = "Clicks: $count", style = MaterialTheme.typography.h4)
+        Text(text = "Clicks: $count", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(16.dp))
 
