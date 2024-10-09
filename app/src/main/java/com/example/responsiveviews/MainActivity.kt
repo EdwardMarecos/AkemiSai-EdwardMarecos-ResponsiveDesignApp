@@ -5,11 +5,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,7 +26,6 @@ class MainActivity : ComponentActivity() {
             ResponsiveViewsTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Response(
-                        name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -34,7 +36,10 @@ class MainActivity : ComponentActivity() {
 
 // Responsive Views based on device configuration and screen size and orientation (portrait/landscape)
 @Composable
-fun Response(name: String, modifier: Modifier = Modifier) {
+fun Response(modifier: Modifier = Modifier) {
+    // Sharing state (rounds) between components
+    val rounds = remember { mutableStateListOf<String>() }
+
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val configuration = LocalConfiguration.current
         val orientation = configuration.orientation
@@ -43,22 +48,22 @@ fun Response(name: String, modifier: Modifier = Modifier) {
         when {
             // Tablet in landscape mode
             orientation == Configuration.ORIENTATION_LANDSCAPE && maxWidth > 600.dp -> {
-                TabletLandscapeContent(name)
+                TabletLandscapePanel(rounds)
             }
             // Tablet in portrait mode
             orientation == Configuration.ORIENTATION_PORTRAIT && maxWidth > 600.dp -> {
-                TabletPortraitContent(name)
+                TabletPortraitContent(rounds)
             }
             // Phone in landscape mode
             orientation == Configuration.ORIENTATION_LANDSCAPE && maxWidth <= 600.dp -> {
-                PhoneLandscapeContent(name)
+                PhoneLandscapeContent(rounds)
             }
             // Phone in portrait mode
             orientation == Configuration.ORIENTATION_PORTRAIT && maxWidth <= 600.dp -> {
-                PhonePortraitContent(name)
+                PhonePortraitContent(rounds)
             }
             else -> {
-                PhonePortraitContent(name) // Default to phone portrait if other checks fail
+                PhonePortraitContent(rounds) // Default to phone portrait if other checks fail
             }
         }
     }
@@ -66,63 +71,124 @@ fun Response(name: String, modifier: Modifier = Modifier) {
 
 // Tablet content in portrait mode (larger device)
 @Composable
-fun TabletPortraitContent(name: String) {
+fun TabletPortraitContent(rounds: MutableList<String>) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .background(Color.LightGray) // Add background color
     ) {
-        Text(text = "Tablet Portrait Layout for $name", style = MaterialTheme.typography.headlineLarge)
+        Text(text = "Tablet Portrait Layout", style = MaterialTheme.typography.headlineLarge)
         Spacer(modifier = Modifier.height(16.dp))
-        CookieClickerApp() // Cookie Clicker App
+
+        // Cookie Clicker App
+        CookieClickerApp(rounds)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Dynamic scoreboard
+        DynamicScoreboard(rounds)
     }
 }
 
-// Tablet content in landscape mode (larger device)
+// Tablet content in landscape mode (larger device) with side panel and dynamic scoreboard
 @Composable
-fun TabletLandscapeContent(name: String) {
+fun TabletLandscapePanel(rounds: MutableList<String>) {
     Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Cyan) // Add background color for landscape mode
     ) {
-        Text(text = "Tablet Landscape Layout for $name", style = MaterialTheme.typography.headlineLarge)
-        Spacer(modifier = Modifier.width(16.dp))
-        CookieClickerApp() // Cookie Clicker App
+        Column(modifier = Modifier
+            .weight(1f)
+            .padding(16.dp)
+            .background(Color.Yellow)) {
+            Text(text = "Tablet Landscape Layout", style = MaterialTheme.typography.headlineMedium)
+        }
+
+        // Dynamic scoreboard in the middle
+        DynamicScoreboard(rounds)
+
+        // Cookie clicker on the right
+        Column(modifier = Modifier
+            .weight(2f)
+            .padding(16.dp)
+            .background(Color.Green)) {
+            CookieClickerApp(rounds)
+        }
     }
 }
 
 // Phone content in portrait mode (small device)
 @Composable
-fun PhonePortraitContent(name: String) {
+fun PhonePortraitContent(rounds: MutableList<String>) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize().padding(8.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+            .background(Color.LightGray) // Add background color for portrait mode
     ) {
-        Text(text = "Hello $name!", style = MaterialTheme.typography.headlineMedium)
+        Text(text = "Phone Portrait Layout", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
-        CookieClickerApp() // Cookie Clicker App
+        CookieClickerApp(rounds)
     }
 }
 
-// Phone content in landscape mode (small device)
+// Phone content in landscape mode (small device) with dynamic scoreboard
 @Composable
-fun PhoneLandscapeContent(name: String) {
+fun PhoneLandscapeContent(rounds: MutableList<String>) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .background(Color.Magenta) // Add background color for landscape mode
     ) {
-        Text(text = "Phone Landscape Layout for $name", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.width(16.dp))
-        CookieClickerApp() // Cookie Clicker App
+        // Dynamic scoreboard in the middle
+        DynamicScoreboard(rounds)
+
+        // Counter and Buttons on the right
+        Column(modifier = Modifier
+            .weight(2f)
+            .padding(16.dp)
+            .background(Color.Red)) {
+            CookieClickerApp(rounds)
+        }
     }
 }
 
-// A simple cookie clicker app
+// Dynamic scoreboard panel (separated from CookieClickerApp)
 @Composable
-fun CookieClickerApp() {
+fun DynamicScoreboard(rounds: MutableList<String>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // This LazyColumn will display the dynamic scoreboard
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            items(rounds.size) { index ->
+                Text("Round ${index + 1}: ${rounds[index]} clicks")
+            }
+        }
+    }
+}
+
+// A simple cookie clicker app (without scoreboard, handled separately)
+@Composable
+fun CookieClickerApp(rounds: MutableList<String>) {
     var count by remember { mutableIntStateOf(0) }
 
     Column(
@@ -130,17 +196,48 @@ fun CookieClickerApp() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(onClick = { count++ }) {
-            Text("Click the Cookie")
-        }
+        // Display current score
+        ScorePanel(count)
+
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Clicks: $count", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { count = 0 }) {
-            Text("Reset")
+
+        // Action buttons
+        ActionPanel { action ->
+            when (action) {
+                "Increment" -> count++
+                "Reset" -> {
+                    rounds.add(count.toString())  // Log the number of clicks
+                    count = 0  // Reset the counter
+                }
+            }
         }
     }
 }
+
+// Action panel for buttons
+@Composable
+fun ActionPanel(onAction: (String) -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxWidth().padding(16.dp)
+    ) {
+        Button(onClick = { onAction("Increment") }) { Text("Increment") }
+        Button(onClick = { onAction("Reset") }) { Text("Reset") }
+    }
+}
+
+// Panel for displaying the current score
+@Composable
+fun ScorePanel(count: Int) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth().padding(16.dp)
+    ) {
+        Text("Current Score: $count", style = MaterialTheme.typography.headlineMedium)
+    }
+}
+
 
 // Preview on a phone in portrait mode
 @Preview(
@@ -153,7 +250,6 @@ fun ResponsivePortraitPhonePreview() {
     ResponsiveViewsTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             Response(
-                name = "Phone (Portrait)",
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -164,14 +260,13 @@ fun ResponsivePortraitPhonePreview() {
 @Preview(
     showSystemUi = true,
     showBackground = true,
-    device = "spec:width=411dp,height=891dp"
+    device = "spec:width=411dp,height=891dp,orientation=landscape"
 )
 @Composable
 fun ResponsiveLandscapePhonePreview() {
     ResponsiveViewsTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             Response(
-                name = "Phone (Landscape)",
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -182,14 +277,13 @@ fun ResponsiveLandscapePhonePreview() {
 @Preview(
     showSystemUi = true,
     showBackground = true,
-    device = "spec:width=1280dp,height=800dp,dpi=240"
+    device = "spec:width=1280dp,height=800dp,dpi=240,orientation=portrait"
 )
 @Composable
 fun ResponsivePortraitTabletPreview() {
     ResponsiveViewsTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             Response(
-                name = "Tablet (Portrait)",
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -207,7 +301,6 @@ fun ResponsiveLandscapeTabletPreview() {
     ResponsiveViewsTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             Response(
-                name = "Tablet (Landscape)",
                 modifier = Modifier.padding(innerPadding)
             )
         }
